@@ -1,113 +1,91 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import axios from 'axios';
 import './PlaylistGrid.css';
 
-function PlaylistGrid({ accessToken }) {
-    const [playlists, setPlaylists] = useState([]);
-    const [selectedPlaylist, setSelectedPlaylist] = useState(null);
-    const [trackImages, setTrackImages] = useState([]);
-    const [loading, setLoading] = useState(false);
+function PlaylistGrid({ images, isLoading }) {
+    const canvasRef = useRef(null);
+    const CANVAS_SIZE = 3000;
 
     useEffect(() => {
-        const fetchPlaylists = async () => {
+        if (!images || images.length === 0) return;
+
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+
+        // Calculate optimal grid dimensions
+        const totalImages = images.length;
+        const cols = Math.ceil(Math.sqrt(totalImages));
+        const totalSlots = cols * cols; // Total number of slots in the grid
+        
+        // Create array with filled slots and random images for empty slots
+        const filledImages = [...images];
+        while (filledImages.length < totalSlots) {
+            // Pick a random image from the original set
+            const randomImage = images[Math.floor(Math.random() * images.length)];
+            filledImages.push(randomImage);
+        }
+
+        const imageSize = CANVAS_SIZE / cols;
+
+        const loadImage = (src) => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+        };
+
+        const drawGrid = async () => {
             try {
-                const response = await axios.get('https://api.spotify.com/v1/me/playlists', {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-                
-                setPlaylists(response.data.items);
+                for (let i = 0; i < totalSlots; i++) {
+                    const row = Math.floor(i / cols);
+                    const col = i % cols;
+                    const x = col * imageSize;
+                    const y = row * imageSize;
+
+                    const img = await loadImage(filledImages[i]);
+                    ctx.drawImage(img, x, y, imageSize, imageSize);
+                }
             } catch (error) {
-                console.error('Error fetching playlists:', error);
+                console.error('Error loading images:', error);
             }
         };
 
-        if (accessToken) {
-            fetchPlaylists();
-        }
-    }, [accessToken]);
+        drawGrid();
+    }, [images]);
 
-    const fetchAllTracks = async (playlistId) => {
-        setLoading(true);
-        const tracks = [];
-        let url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+    const handleDownload = () => {
+        const canvas = canvasRef.current;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
         
-        try {
-            while (url) {
-                const response = await axios.get(url, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-                
-                tracks.push(...response.data.items);
-                url = response.data.next;
-            }
-
-            // Extract unique album images
-            const images = [...new Set(
-                tracks
-                    .filter(track => track.track && track.track.album.images[0])
-                    .map(track => track.track.album.images[0].url)
-            )];
-
-            setTrackImages(images);
-            setSelectedPlaylist(playlistId);
-        } catch (error) {
-            console.error('Error fetching tracks:', error);
-        } finally {
-            setLoading(false);
-        }
+        const link = document.createElement('a');
+        link.download = 'playlist-grid.jpg';
+        link.href = dataUrl;
+        link.click();
     };
-
-    // Calculate grid dimensions for a square-ish layout
-    const calculateGridDimensions = (imageCount) => {
-        const cols = Math.ceil(Math.sqrt(imageCount));
-        const rows = Math.ceil(imageCount / cols);
-        return { cols, rows };
-    };
-
-    if (loading) {
-        return <div>Loading tracks...</div>;
-    }
-
-    if (selectedPlaylist) {
-        const { cols } = calculateGridDimensions(trackImages.length);
-        return (
-            <div>
-                <button onClick={() => setSelectedPlaylist(null)}>Back to Playlists</button>
-                <div className="image-grid" style={{ 
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                    gap: '8px'
-                }}>
-                    {trackImages.map((image, index) => (
-                        <img 
-                            key={index}
-                            src={image}
-                            alt={`Album art ${index + 1}`}
-                            style={{ width: '100%', aspectRatio: '1' }}
-                        />
-                    ))}
-                </div>
-            </div>
-        );
-    }
 
     return (
-        <div className="playlist-list">
-            {playlists.map(playlist => (
-                <div 
-                    key={playlist.id} 
-                    className="playlist-item"
-                    onClick={() => fetchAllTracks(playlist.id)}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <h3>{playlist.name}</h3>
-                    <p>{playlist.tracks.total} tracks</p>
+        <div>
+            {isLoading ? (
+                <div>Loading all tracks...</div>
+            ) : (
+                <div style={{ width: '100%', aspectRatio: '1' }}>
+                    <canvas 
+                        ref={canvasRef}
+                        style={{ 
+                            width: '100%', 
+                            height: '100%',
+                            objectFit: 'contain'
+                        }}
+                    />
+                    <button onClick={handleDownload}>Download Grid Image</button>
                 </div>
-            ))}
+            )}
         </div>
     );
 }

@@ -1,0 +1,22 @@
+.playlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.playlist-item {
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.playlist-item:hover {
+    transform: scale(1.05);
+}
+
+.playlist-item img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+} 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Login from './components/Login';
-import PlaylistGrid from './components/PlaylistGrid';
+import PlaylistList from './components/PlaylistList';
+import { SpotifyContext } from './context/SpotifyContext';
 
 function App() {
     const [accessToken, setAccessToken] = useState(null);
@@ -26,13 +27,15 @@ function App() {
     }, [accessToken]);
 
     return (
-        <div className="App">
-            {!accessToken ? (
-                <Login />
-            ) : (
-                <PlaylistGrid accessToken={accessToken} />
-            )}
-        </div>
+        <SpotifyContext.Provider value={{ accessToken }}>
+            <div className="App">
+                {!accessToken ? (
+                    <Login />
+                ) : (
+                    <PlaylistList />
+                )}
+            </div>
+        </SpotifyContext.Provider>
     );
 }
 
