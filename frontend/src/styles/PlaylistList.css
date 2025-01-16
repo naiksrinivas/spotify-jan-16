@@ -3,20 +3,34 @@
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
     padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .playlist-item {
     cursor: pointer;
     text-align: center;
     transition: transform 0.2s;
+    background: white;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .playlist-item:hover {
     transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .playlist-item img {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
-} 
+    border-radius: 8px;
+}
+
+.playlist-item p {
+    margin: 10px 0;
+    font-weight: 500;
+    color: #333;
+}

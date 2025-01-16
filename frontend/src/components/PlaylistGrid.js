@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import './PlaylistGrid.css';
+import '../styles/loading.css';
 
 function PlaylistGrid({ images, isLoading }) {
     const canvasRef = useRef(null);
     const CANVAS_SIZE = 3000;
+    const [isDrawing, setIsDrawing] = useState(false);
 
     useEffect(() => {
         if (!images || images.length === 0) return;
@@ -15,20 +17,16 @@ function PlaylistGrid({ images, isLoading }) {
         canvas.width = CANVAS_SIZE;
         canvas.height = CANVAS_SIZE;
 
-        // Calculate optimal grid dimensions
-        const totalImages = images.length;
-        const cols = Math.ceil(Math.sqrt(totalImages));
-        const totalSlots = cols * cols; // Total number of slots in the grid
-        
-        // Create array with filled slots and random images for empty slots
+        const cols = Math.ceil(Math.sqrt(images.length));
+        const totalSlots = cols * cols;
+        const imageSize = CANVAS_SIZE / cols;
+
+        // Create array with filled slots and random images
         const filledImages = [...images];
         while (filledImages.length < totalSlots) {
-            // Pick a random image from the original set
             const randomImage = images[Math.floor(Math.random() * images.length)];
             filledImages.push(randomImage);
         }
-
-        const imageSize = CANVAS_SIZE / cols;
 
         const loadImage = (src) => {
             return new Promise((resolve, reject) => {
@@ -40,19 +38,35 @@ function PlaylistGrid({ images, isLoading }) {
             });
         };
 
-        const drawGrid = async () => {
-            try {
-                for (let i = 0; i < totalSlots; i++) {
-                    const row = Math.floor(i / cols);
-                    const col = i % cols;
-                    const x = col * imageSize;
-                    const y = row * imageSize;
+        const drawImageToCanvas = (img, index) => {
+            const row = Math.floor(index / cols);
+            const col = index % cols;
+            const x = col * imageSize;
+            const y = row * imageSize;
+            ctx.drawImage(img, x, y, imageSize, imageSize);
+        };
 
-                    const img = await loadImage(filledImages[i]);
-                    ctx.drawImage(img, x, y, imageSize, imageSize);
-                }
+        const drawGrid = async () => {
+            setIsDrawing(true);
+            try {
+                // Load all images in parallel
+                const imagePromises = filledImages.map(url => loadImage(url));
+                
+                // Use Promise.allSettled to handle both successful and failed image loads
+                const loadedImages = await Promise.allSettled(imagePromises);
+                
+                // Draw successful images to canvas
+                loadedImages.forEach((result, index) => {
+                    if (result.status === 'fulfilled') {
+                        drawImageToCanvas(result.value, index);
+                    } else {
+                        console.error(`Failed to load image at index ${index}:`, result.reason);
+                    }
+                });
             } catch (error) {
-                console.error('Error loading images:', error);
+                console.error('Error in grid drawing:', error);
+            } finally {
+                setIsDrawing(false);
             }
         };
 
@@ -70,22 +84,39 @@ function PlaylistGrid({ images, isLoading }) {
     };
 
     return (
-        <div>
-            {isLoading ? (
-                <div>Loading all tracks...</div>
-            ) : (
-                <div style={{ width: '100%', aspectRatio: '1' }}>
-                    <canvas 
-                        ref={canvasRef}
-                        style={{ 
-                            width: '100%', 
-                            height: '100%',
-                            objectFit: 'contain'
-                        }}
-                    />
-                    <button onClick={handleDownload}>Download Grid Image</button>
+        <div className="container">
+            {(isLoading || isDrawing) && (
+                <div className="loading-overlay">
+                    <div className="loading-content">
+                        <img 
+                            src="/loader.gif" 
+                            alt="Loading..." 
+                            className="loading-spinner"
+                        />
+                        <div className="loading-text">
+                            {isLoading ? 'Loading tracks...' : 'Creating your grid image...'}
+                        </div>
+                    </div>
                 </div>
             )}
+            <div style={{ width: '100%', aspectRatio: '1' }}>
+                <canvas 
+                    ref={canvasRef}
+                    style={{ 
+                        width: '100%', 
+                        height: '100%',
+                        objectFit: 'contain',
+                        marginBottom: '20px'
+                    }}
+                />
+                <button 
+                    className="button" 
+                    onClick={handleDownload}
+                    disabled={isDrawing}
+                >
+                    Download Grid Image
+                </button>
+            </div>
         </div>
     );
 }

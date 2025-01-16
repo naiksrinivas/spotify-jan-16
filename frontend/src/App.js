@@ -3,6 +3,7 @@ import axios from 'axios';
 import Login from './components/Login';
 import PlaylistList from './components/PlaylistList';
 import { SpotifyContext } from './context/SpotifyContext';
+import './styles/shared.css';
 
 function App() {
     const [accessToken, setAccessToken] = useState(null);
@@ -30,7 +31,9 @@ function App() {
         <SpotifyContext.Provider value={{ accessToken }}>
             <div className="App">
                 {!accessToken ? (
-                    <Login />
+                    <div className="container">
+                        <Login />
+                    </div>
                 ) : (
                     <PlaylistList />
                 )}

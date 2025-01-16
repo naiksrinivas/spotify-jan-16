@@ -1,0 +1,46 @@
+/* Common styles for the app */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+.button {
+    background-color: #1DB954;  /* Spotify green */
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    margin: 20px 0;
+}
+
+.button:hover {
+    background-color: #1ed760;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 10px rgba(29, 185, 84, 0.3);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+h1, h2 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+} 

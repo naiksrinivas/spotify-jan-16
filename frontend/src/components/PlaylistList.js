@@ -52,6 +52,7 @@ function PlaylistList() {
             ) : (
                 <div>
                     <h1>Your Playlists</h1>
+                    <h2>Select a playlist to generate playlist image grid</h2>
                     <div className="playlist-grid">
                         {playlists.map(playlist => (
                             <div 

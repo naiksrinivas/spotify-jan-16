@@ -48,8 +48,10 @@ function Playlist({ selectedPlaylist, onBackClick }) {
     }, [selectedPlaylist, accessToken]);
 
     return (
-        <div>
-            <button onClick={onBackClick}>Back to Playlists</button>
+        <div className="container">
+            <button className="button" onClick={onBackClick}>
+                Back to Playlists
+            </button>
             <h2>{selectedPlaylist?.name}</h2>
             <PlaylistGrid images={trackImages} isLoading={isLoading} />
         </div>
