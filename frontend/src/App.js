@@ -6,9 +6,6 @@ import { SpotifyContext } from './context/SpotifyContext';
 import './styles/shared.css';
 import { API_URL, BASE_URL } from './config';
 
-console.log('Public URL:', process.env.PUBLIC_URL);
-console.log('API URL:', process.env.REACT_APP_API_URL);
-
 function App() {
     const [accessToken, setAccessToken] = useState(null);
 
@@ -18,8 +15,8 @@ function App() {
         const code = urlParams.get('code');
 
         if (code && !accessToken) {
-            // Clear the URL parameters after getting the code
-            window.history.pushState({}, null, BASE_URL);
+            // Clear the code from URL to prevent multiple callback attempts
+            window.history.replaceState({}, document.title, window.location.pathname);
             
             axios.get(`${API_URL}/callback?code=${code}`)
                 .then(response => {
